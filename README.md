@@ -24,3 +24,8 @@ This solution can be applied across a variety of industries where KYC, identity 
 2. **AWS IAM** – Access control; used to grant secure permissions between services especially lambda.
 3. **Amazon DynamoDB** – NoSQL database; stores extracted customer details after processing and validating.
 4. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
+
+## Steps:
+
+1. Created an encrypted S3 bucket (documentbucket) to securely store customer application zip files and its unzipped content. Applied bucket policies to enforce TLS-only connections and prevent public access.
+2. Created the IAM role with least-privilege permissions to allow Lambda functions to read, write, and delete objects from the document bucket.
