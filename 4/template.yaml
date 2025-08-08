@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-kyc
+
+  Sample SAM Template for sam-kyc
+
+Resources:
+
+#-----Start - S3 document bucket -----#
+  DocumentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub documentbucket-${AWS::AccountId}
+      PublicAccessBlockConfiguration: #Sets "Block all public access" to "On" for the bucket
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+#-----End - S3 document bucket -----#
+
+#-----Start Document bucket policy -----#
+  DocumentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref DocumentBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: s3:*
+            Effect: Deny
+            Resource: 
+              - !Sub arn:aws:s3:::${DocumentBucket}
+              - !Sub arn:aws:s3:::${DocumentBucket}/*
+            Principal: '*'
+            Condition:
+              Bool: 
+                'aws:SecureTransport': 
+                  - false
+#-----End Document bucket policy -----#
+
+#-----Start - SNS Topic -----#
+  ApplicationStatusTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: ApplicationNotifications
+      TopicName: ApplicationNotifications
+      KmsMasterKeyId: alias/aws/sns
+#-----End - SNS Topic -----#
+
+#-----Start - DDB for customer metadata with auto-scaling-----#
+  CustomerDDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: APP_UUID
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: APP_UUID
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: CustomerMetadataTable
+      SSESpecification:
+        SSEEnabled: true
+
+  DDBWriteAutoScaling:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: CustomerDDBTable
+    Properties:
+      MaxCapacity: 20
+      MinCapacity: 2
+      ResourceId: table/CustomerMetadataTable
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+
+  DDBReadAutoScaling:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: CustomerDDBTable
+    Properties:
+      MaxCapacity: 20
+      MinCapacity: 2
+      ResourceId: table/CustomerMetadataTable
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  TableWriteScalingPolicy: 
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties: 
+      PolicyName: WriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref DDBWriteAutoScaling
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 70
+        ScaleInCooldown: 2
+        ScaleOutCooldown: 2
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  TableReadScalingPolicy: 
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties: 
+      PolicyName: ReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref DDBReadAutoScaling
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 70
+        ScaleInCooldown: 2
+        ScaleOutCooldown: 2
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+#-----End - DDB for customer metadata with auto-scaling-----#
+
+#-----Start - Lambda Function for invoking the function and processing kyc documents-----#
+  DocumentLambdaFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      FunctionName: DocumentLambdaFunction
+      Timeout: 20
+      CodeUri: DocumentLambdaFunction/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role: arn:aws:iam::602229925475:role/DocumentLambdaRole
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref DocumentBucket
+            Events: s3:ObjectCreated:Put
+            Filter:
+              S3Key:
+                Rules:
+                - Name: prefix
+                  Value: zipped/
+      Environment:
+        Variables:
+          TABLE:  !Ref CustomerDDBTable
+
+
+#-----End - Lambda Function for invoking the function and processing kyc documents-----#       
