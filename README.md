@@ -20,12 +20,16 @@ This solution can be applied across a variety of industries where KYC, identity 
 
 ## AWS Services Used&#x20;
 
-1. **Amazon S3** – File storage; users upload a ZIP file containing their KYC documents through a frontend application(not designed).
-2. **AWS IAM** – Access control; used to grant secure permissions between services especially lambda.
-3. **Amazon DynamoDB** – NoSQL database; stores extracted customer details after processing and validating.
-4. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
+1. **AWS Lambda** – Serverless compute; used for all backend logic such as file unzipping, data extraction, image comparison, and data validation.
+2. **Amazon S3** – File storage; users upload a ZIP file containing their KYC documents through a frontend application(not designed).
+3. **AWS IAM** – Access control; used to grant secure permissions between services especially lambda.
+4. **Amazon CloudWatch** – Observability; used to monitor Lambda execution and application health with metrics and logs.
+5. **Amazon DynamoDB** – NoSQL database; stores extracted customer details after processing and validating.
+6. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
 
 ## Steps:
 
 1. Created an encrypted S3 bucket (documentbucket) to securely store customer application zip files and its unzipped content. Applied bucket policies to enforce TLS-only connections and prevent public access.
 2. Created the IAM role with least-privilege permissions to allow Lambda functions to read, write, and delete objects from the document bucket.
+3. Created the IAM role for cloudwatch permissions(needed for lambda function logging), the lambda function for extracting the files from zip folder and putting it into another "unzipped" prefix
+4. Created the sam configuration file for automatic resource build and deployment as well as the lambda function that parses customer details from csv file and puts it in dynamodb table.
