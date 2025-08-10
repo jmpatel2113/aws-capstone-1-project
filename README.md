@@ -26,7 +26,8 @@ This solution can be applied across a variety of industries where KYC, identity 
 4. **Amazon CloudWatch** – Observability; used to monitor Lambda execution and application health with metrics and logs.
 5. **Amazon DynamoDB** – NoSQL database; stores extracted customer details after processing and validating.
 6. **Amazon Rekognition** – Image analysis; used to compare the selfie photo with the driver’s license photo.
-7. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
+7. **Amazon Textract** - Text extraction; used to extract related information from the ID.
+8. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
 
 ## Steps:
 
@@ -35,3 +36,4 @@ This solution can be applied across a variety of industries where KYC, identity 
 3. Created the IAM role for cloudwatch permissions(needed for lambda function logging), the lambda function for extracting the files from zip folder and putting it into another "unzipped" prefix.
 4. Created the sam configuration file for automatic resource build and deployment as well as the lambda function that parses customer details from csv file and puts it in dynamodb table.
 5. Created the IAM role for rekognition permissions and wrote the lambda function code for comparing selfie of customer and ID photo and update dynamodb table accordingly.
+6. Created the IAM role for textract permissions and wrote the lambda function code for extracting details from ID and comparing it with customer input details + update dynammdb table & sns notification accordingly
