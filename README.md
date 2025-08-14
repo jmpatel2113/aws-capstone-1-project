@@ -27,7 +27,9 @@ This solution can be applied across a variety of industries where KYC, identity 
 5. **Amazon DynamoDB** – NoSQL database; stores extracted customer details after processing and validating.
 6. **Amazon Rekognition** – Image analysis; used to compare the selfie photo with the driver’s license photo.
 7. **Amazon Textract** - Text extraction; used to extract related information from the ID.
-8. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
+8. **AWS SAM** - Serverless build & deploy; used for building & deploying serverless resources like lambda functions, S3 storage bucket & prefixes, API, DynamoDB tables and sns topic
+9. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
+10. **Amazon API Gateway** – API management; used  for testing/invoking Lambda functions via HTTP calls for 3rd party ID verification.
 
 ## Steps:
 
@@ -37,3 +39,4 @@ This solution can be applied across a variety of industries where KYC, identity 
 4. Created the sam configuration file for automatic resource build and deployment as well as the lambda function that parses customer details from csv file and puts it in dynamodb table.
 5. Created the IAM role for rekognition permissions and wrote the lambda function code for comparing selfie of customer and ID photo and update dynamodb table accordingly.
 6. Created the IAM role for textract permissions and wrote the lambda function code for extracting details from ID and comparing it with customer input details + update dynammdb table & sns notification accordingly
+7. Created the lambda function that mimics a third-party DL/ID validation service and it is invoked by an HTTP API that is created using Amazon API Gateway.
