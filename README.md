@@ -42,3 +42,4 @@ This solution can be applied across a variety of industries where KYC, identity 
 6. Created the IAM role for textract permissions and wrote the lambda function code for extracting details from ID and comparing it with customer input details + update dynammdb table & sns notification accordingly
 7. Created the lambda function that mimics a third-party DL/ID validation service and it is invoked by an HTTP API that is created using Amazon API Gateway.
 8. Created SQS queue to process the messages asking for license/ID validation that is done through a mock 3rd party service
+9. Decoupling the lambda function code into 4 smaller function codes, so that it can run in an asynchronous manner, instead of 1 function running it synchronously. This allows me to debug and maintain the workflow/code in an easier way.
