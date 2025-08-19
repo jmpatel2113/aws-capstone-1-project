@@ -31,6 +31,7 @@ This solution can be applied across a variety of industries where KYC, identity 
 9. **Amazon SNS** - Notifications; used to send email notifications to customers for failed/successful checks
 10. **Amazon API Gateway** – API management; used  for testing/invoking Lambda functions via HTTP calls for 3rd party ID verification.
 11. **Amazon SQS** - Messaging queue; used to send messages and it is used to invoke lambda function for license validation.
+12. **AWS X-Ray** - Distributed tracing; used to trace workflows across Lambda functions and Step Functions.
 
 ## Steps:
 
